@@ -1,0 +1,207 @@
+create database project;
+use project;
+
+-- First I have imported the data 
+select * from customers;
+desc customers;
+select * from orders;
+desc orders;
+select * from restaurants;
+desc restaurants;
+
+
+-- Problem statements
+
+
+/* 1. List restaurant names and categories for orders paid via UPI */
+
+SELECT DISTINCT 
+	restaurants.restaurant_name, 
+    restaurants.category
+FROM orders 
+JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id
+WHERE orders.payment_method = 'UPI';
+
+
+/* 2. Show all customers who ordered from "Taste Buds" */
+
+SELECT DISTINCT 
+	customers.customer_name, 
+    customers.city,
+    restaurants.restaurant_name
+FROM orders 
+JOIN customers ON orders.customer_id = customers.customer_id
+JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id
+WHERE restaurants.restaurant_name = 'Taste Buds';
+
+-- INNER JOINS
+/* 3. Which customers placed orders and from which restaurants? */
+SELECT 
+	customers.customer_name, 
+    restaurants.restaurant_name, 
+    orders.total_amount
+FROM orders 
+INNER JOIN customers ON orders.customer_id = customers.customer_id
+INNER JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id;
+
+-- LEFT JOINS
+/* 4. Show all customers, including those who haven’t placed any orders. */
+SELECT 
+	customers.customer_name, 
+    orders.order_id, 
+    orders.total_amount
+FROM customers 
+LEFT JOIN orders ON customers.customer_id = orders.customer_id;
+
+-- RIGHT JOINNS
+/* 5.Show all orders, including those not linked to any customer (if any). */
+SELECT 
+	orders.order_id, 
+    customers.customer_name, 
+    orders.total_amount
+FROM orders 
+RIGHT JOIN customers ON orders.customer_id = customers.customer_id;
+
+-- FULL OUTER JOIN
+/* 6.Show all customers and all orders, even if some customers haven’t placed orders 
+or some orders aren’t linked to valid customers. */
+
+SELECT 
+	customers.customer_id, 
+	customers.customer_name, 
+    orders.order_id, 
+    orders.total_amount
+FROM customers 
+LEFT JOIN orders ON customers.customer_id = orders.customer_id
+UNION
+SELECT 
+	customers.customer_id, 
+    customers.customer_name, 
+    orders.order_id, 
+    orders.total_amount
+FROM orders 
+RIGHT JOIN customers ON orders.customer_id = customers.customer_id;
+
+
+
+--  CONDITIONAL & FILTERING LOGIC
+
+/* 7. Get orders where the amount is between ₹500 and ₹1500 */
+
+SELECT 
+	order_id, 
+    total_amount, 
+    payment_method
+FROM Orders
+WHERE total_amount BETWEEN 500 AND 1500;
+
+/* 8. List all restaurants not located in Mumbai */
+
+SELECT 
+	restaurant_name, 
+    location
+FROM Restaurants
+WHERE location <> 'Mumbai';
+
+/* 9. Display all customer orders with restaurant and customer details */
+
+SELECT 
+    orders.order_id,
+    customers.customer_name,
+    restaurants.restaurant_name,
+    orders.order_date,
+    orders.total_amount
+FROM Orders 
+JOIN Customers ON orders.customer_id = customers.customer_id
+JOIN Restaurants ON Orders.restaurant_id = restaurants.restaurant_id;
+
+
+/* 10. Find all customers who ordered from restaurants in their own city */
+
+SELECT DISTINCT 
+	customers.customer_name,
+	restaurants.restaurant_name, 
+	restaurants.location
+FROM Orders 
+JOIN Customers ON orders.customer_id = customers.customer_id
+JOIN Restaurants ON orders.restaurant_id = restaurants.restaurant_id
+WHERE customers.city = restaurants.location;
+
+/* 11. Find total sales (revenue) for each restaurant */
+SELECT 
+    restaurants.restaurant_name,
+    SUM(orders.total_amount) AS total_sales
+FROM orders
+JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id
+GROUP BY restaurant_name
+ORDER BY total_sales DESC;
+
+/* 12. Highest-rated restaurant average rating (Top 5) */
+SELECT 
+	restaurants.restaurant_name, 
+	AVG(orders.rating) AS avg_rating
+FROM orders 
+JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id
+GROUP BY restaurants.restaurant_name
+ORDER BY avg_rating DESC
+limit 5;
+
+/* 13. Top 5 Restaurants by Number of Order */
+SELECT 
+	restaurants.restaurant_name, 
+    COUNT(orders.order_id) AS total_orders
+FROM orders
+JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id
+GROUP BY restaurants.restaurant_id
+ORDER BY total_orders DESC
+LIMIT 10;
+
+
+-- SUBQUERY
+/* 14. Customers who have placed orders above the average order amount */
+
+-- First lets see what is the AVG order amount
+SELECT AVG(total_amount) FROM Orders;
+-- Now Write the query
+SELECT DISTINCT 
+	customers.customer_name
+FROM orders 
+JOIN Customers ON orders.customer_id = customers.customer_id
+WHERE orders.total_amount > (SELECT AVG(total_amount) FROM Orders);
+
+
+/* 15. Restaurants that received both cash and card payments */
+
+-- step 1: find restaurant received cash payment
+SELECT 
+	restaurant_id 
+FROM Orders 
+WHERE payment_method = 'Cash';
+  -- step2: find restaurant received card payment
+ SELECT 
+ restaurant_id 
+ FROM Orders 
+ WHERE payment_method = 'Card';
+ -- Final query
+SELECT 
+	restaurant_name
+FROM Restaurants
+WHERE restaurant_id IN 
+    (SELECT restaurant_id FROM Orders WHERE payment_method = 'Cash')
+AND 
+	restaurant_id IN 
+    (SELECT restaurant_id FROM Orders WHERE payment_method = 'Card');
+ 
+
+desc orders;
+select 
+restaurants.restaurant_id,
+Restaurants.restaurant_name,
+orders.rating
+ from  orders
+join restaurants on orders.order_id=restaurants.restaurant_id
+where rating < 2;
+
+select avg (rating)
+from orders
+where order_id = 12;
